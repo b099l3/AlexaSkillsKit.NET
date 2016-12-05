@@ -7,12 +7,18 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Runtime.Caching;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Org.BouncyCastle.X509;
 using Org.BouncyCastle.Security.Certificates;
+
+#if NET45
+using System.Runtime.Caching;
+#else
+// TODO get caching working on .Net Core
+using CacheManager.Core;
+#endif
 
 namespace AlexaSkillsKit.Authentication
 {
@@ -20,10 +26,17 @@ namespace AlexaSkillsKit.Authentication
     {
         private static Func<string, string> _getCertCacheKey = (string url) => string.Format("{0}_{1}", Sdk.SIGNATURE_CERT_URL_REQUEST_HEADER, url);
 
+#if NET45
         private static CacheItemPolicy _policy = new CacheItemPolicy {
             Priority = CacheItemPriority.Default,
             AbsoluteExpiration = DateTimeOffset.UtcNow.AddHours(24)
         };
+#else
+        private static ICacheManager<Object> cache = CacheFactory.Build("cacheName", settings => settings
+            .WithUpdateMode(CacheUpdateMode.Up)
+            .WithSystemRuntimeCacheHandle("handleName")
+            .WithExpiration(ExpirationMode.Sliding, TimeSpan.FromHours(24)));
+#endif
 
 
         /// <summary>
@@ -43,7 +56,13 @@ namespace AlexaSkillsKit.Authentication
             return
                 certChainUri.Host.Equals(Sdk.SIGNATURE_CERT_URL_HOST, StringComparison.OrdinalIgnoreCase) &&
                 certChainUri.PathAndQuery.StartsWith(Sdk.SIGNATURE_CERT_URL_PATH) &&
+#if NET45
                 certChainUri.Scheme == Uri.UriSchemeHttps &&
+#else
+                // Uri.UriSchemeHttps is missing in .Net Core 1.1 https://github.com/dotnet/corefx/issues/10215
+                // Will be out in spring 2017 .Net Core 1.2
+                certChainUri.Scheme == "https" &&
+#endif
                 certChainUri.Port == 443;
         }
 
@@ -55,7 +74,11 @@ namespace AlexaSkillsKit.Authentication
             byte[] serializedSpeechletRequest, string expectedSignature, string certChainUrl) {
 
             string certCacheKey = _getCertCacheKey(certChainUrl);
+#if NET45
             X509Certificate cert = MemoryCache.Default.Get(certCacheKey) as X509Certificate;
+#else
+            X509Certificate cert = cache.Get(certCacheKey) as X509Certificate;
+#endif
             if (cert == null ||
                 !CheckRequestSignature(serializedSpeechletRequest, expectedSignature, cert)) {
 
@@ -66,7 +89,11 @@ namespace AlexaSkillsKit.Authentication
                 cert = RetrieveAndVerifyCertificate(certChainUrl);
                 if (cert == null) return false;
 
+#if NET45
                 MemoryCache.Default.Set(certCacheKey, cert, _policy);
+#else
+                cache.Add(certCacheKey, cert);
+#endif
             }
 
             return CheckRequestSignature(serializedSpeechletRequest, expectedSignature, cert);
@@ -80,7 +107,11 @@ namespace AlexaSkillsKit.Authentication
             byte[] serializedSpeechletRequest, string expectedSignature, string certChainUrl) {
 
             string certCacheKey = _getCertCacheKey(certChainUrl);
+#if NET45
             X509Certificate cert = MemoryCache.Default.Get(certCacheKey) as X509Certificate;
+#else
+            X509Certificate cert = cache.Get(certCacheKey) as X509Certificate;
+#endif
             if (cert == null ||
                 !CheckRequestSignature(serializedSpeechletRequest, expectedSignature, cert)) {
 
@@ -91,7 +122,11 @@ namespace AlexaSkillsKit.Authentication
                 cert = await RetrieveAndVerifyCertificateAsync(certChainUrl);
                 if (cert == null) return false;
 
+#if NET45
                 MemoryCache.Default.Set(certCacheKey, cert, _policy);
+#else
+                cache.Add(certCacheKey, cert);
+#endif
             }
 
             return CheckRequestSignature(serializedSpeechletRequest, expectedSignature, cert);
@@ -106,8 +141,13 @@ namespace AlexaSkillsKit.Authentication
             // so restrict host to an Alexa controlled subdomain/path
             if (!VerifyCertificateUrl(certChainUrl)) return null;
 
+#if NET45
             var webClient = new WebClient();
             var content = webClient.DownloadString(certChainUrl);
+#else
+            var client = new HttpClient();
+            var content = client.GetStringAsync(certChainUrl).Result;
+#endif
 
             var pemReader = new Org.BouncyCastle.OpenSsl.PemReader(new StringReader(content));
             var cert = (X509Certificate)pemReader.ReadObject();
