@@ -1,0 +1,19 @@
+﻿{
+  "version": "1.0.0-*",
+
+  "dependencies": {
+    "Microsoft.AspNet.WebApi.Client": "5.2.3",
+    "NETStandard.Library": "1.6.0",
+    "Newtonsoft.Json": "7.0.1",
+    "Portable.BouncyCastle": "1.8.1.1"
+  },
+
+  "frameworks": {
+    "netstandard1.6": {
+      "imports": [
+        "dnxcore50",
+        "portable-net451+win8"
+      ]
+    }
+  }
+}
