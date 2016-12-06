@@ -32,10 +32,14 @@ namespace AlexaSkillsKit.Authentication
             AbsoluteExpiration = DateTimeOffset.UtcNow.AddHours(24)
         };
 #else
-        private static ICacheManager<Object> cache = CacheFactory.Build("cacheName", settings => settings
-            .WithUpdateMode(CacheUpdateMode.Up)
-            .WithSystemRuntimeCacheHandle("handleName")
-            .WithExpiration(ExpirationMode.Sliding, TimeSpan.FromHours(24)));
+        private static ICacheManager<Object> cache = CacheFactory.Build(settings =>
+            {
+                settings
+                    .WithUpdateMode(CacheUpdateMode.Up)
+                    .WithDictionaryHandle()
+                        .EnablePerformanceCounters()
+                        .WithExpiration(ExpirationMode.Sliding, TimeSpan.FromHours(24));
+            });
 #endif
 
 
