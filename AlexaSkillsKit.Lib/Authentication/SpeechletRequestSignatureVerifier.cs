@@ -37,8 +37,8 @@ namespace AlexaSkillsKit.Authentication
                 settings
                     .WithUpdateMode(CacheUpdateMode.Up)
                     .WithDictionaryHandle()
-                        .EnablePerformanceCounters()
-                        .WithExpiration(ExpirationMode.Sliding, TimeSpan.FromHours(24));
+                    .EnablePerformanceCounters()
+                    .WithExpiration(ExpirationMode.Sliding, TimeSpan.FromHours(24));
             });
 #endif
 
