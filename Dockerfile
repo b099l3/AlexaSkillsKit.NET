@@ -1,10 +1,8 @@
-FROM microsoft/dotnet:latest
+FROM microsoft/dotnet
 
 COPY . /app
 
-WORKDIR /app
-
-ENTRYPOINT ["dotnet", “AlexaSkillsKit.Sample.dll"]
+WORKDIR /app/src/AlexaSkillsKit.Sample
 
 RUN ["dotnet", "restore"]
 

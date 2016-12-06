@@ -1,9 +1,11 @@
-﻿{
+{
   "version": "1.0.0-*",
-
+  "buildOptions": {
+    "debugType": "portable"
+  },
   "dependencies": {
     "Microsoft.AspNet.WebApi.Client": "5.2.3",
-    "NETStandard.Library": "1.6.0",
+    "NETStandard.Library": "1.6.1",
     "Newtonsoft.Json": "9.0.1",
     "Portable.BouncyCastle": "1.8.1.2",
     "System.Collections.NonGeneric": "4.3.0",
@@ -11,9 +13,11 @@
     "System.Net.Http": "4.3.0",
     "CacheManager.Core": "0.9.2"
   },
-
   "frameworks": {
-    "netstandard1.6": {
+    "netcoreapp1.1": {
+      "dependencies": {
+        "NETStandard.Library": "1.6.1"
+      },
       "imports": [
         "dnxcore50",
         "portable-net451+win8"

@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace SampleApp
+namespace AlexaSkillsKit.Sample
 {
     public class Startup
     {
@@ -37,24 +37,7 @@ namespace SampleApp
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseBrowserLink();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
-
-            app.UseStaticFiles();
-
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });
+            app.UseMvc();
         }
     }
 }
